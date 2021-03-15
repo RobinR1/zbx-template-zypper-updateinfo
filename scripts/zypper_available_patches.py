@@ -6,7 +6,7 @@
 # Author: robin.roevens (at) disroot.org
 # Version: 1.0
 #
-# Requires: python >= 3.4z
+# Requires: python >= 3.4
 #           zabbix-sender
 #
 # Host in Zabbix should be configured with the "Template Module Zypper updateinfo by 
