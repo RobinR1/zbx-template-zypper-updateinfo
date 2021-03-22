@@ -27,7 +27,7 @@ zabbix_agent_config = "/etc/zabbix/zabbix_agent2.conf"
 # host on zabbix to send items to. Use '-' to send to the host defined in the agent config (Hostname):
 host_hostname = socket.gethostname()
 
-# Add or remove patch categories and/or severities to your needs:
+# Available categories/severities
 categories = ["security", "recommended", "optional", "feature", "document", "yast"]
 severities = ["critical", "important", "moderate", "low", "unspecified"]
 
