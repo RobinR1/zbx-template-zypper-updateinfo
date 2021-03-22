@@ -48,7 +48,7 @@ def zypper_cmd(params):
 
 def zabbix_sender(hostname, trapitems, configfile):
     # Send a dict of Zabbix trapper items and their values to Zabbix server
-    with tempfile.NamedTemporaryFile() as fp:
+    with tempfile.NamedTemporaryFile(buffering=0) as fp:
         for key, value in trapitems.items():
             line = f"{hostname} {zabbix_item_key_prefix}.{key} {value}\n"
             fp.write(str.encode(line))
@@ -58,21 +58,10 @@ def zabbix_sender(hostname, trapitems, configfile):
             output = subprocess.check_output(command, shell=True)
         except subprocess.CalledProcessError as zabbix_sender_exc:
             print(f"Error running {zabbix_sender_bin}: {zabbix_sender_exc.returncode}\n{zabbix_sender_exc.output.decode('utf-8')}")
-            exit(zabbix_sender_exc.returncode)
-    
-    print(output.decode("utf-8"))
+        else: 
+            print(output.decode("utf-8"))
 
-def main():
-    print("Retrieving available repositories...")
-    repolist = zypper_cmd('repos')
-
-    print("Retrieving available patches...")
-    patchlist = zypper_cmd("list-patches")
-
-    print("Retrieving available package updates...")
-    packagelist = zypper_cmd("list-updates")
-
-    zabbix_items = {}
+def patch_category_discovery():
     # Generate patch categories discovery output
     patch_category_discovery = []
     for category in categories:
@@ -80,8 +69,10 @@ def main():
             patch_category_discovery.append({
                 "{#CATEGORY}": category,
                 "{#SEVERITY}": severity})
-    zabbix_items["patch_category_discovery"] = json.dumps(patch_category_discovery)
 
+    return json.dumps(patch_category_discovery)
+
+def repositories_discovery(repolist):
     # Generate repository discovery output
     repo_discovery = []
     repositories = []
@@ -94,40 +85,63 @@ def main():
         )
         repositories.append(repository.get("alias"))
 
-    zabbix_items["repositories.discovery"] = json.dumps(repo_discovery)
+    return repositories, json.dumps(repo_discovery)
+
+def main():
+    discovery_items = {}
+    update_info = {
+        "patches": {},
+        "packages": {}
+    }
+
+    discovery_items["patch_category.discovery"] = patch_category_discovery()
+
+    print("Retrieving available repositories...")
+    repositories, discovery_items["repositories.discovery"] = repositories_discovery(zypper_cmd('repos'))
+
+    print("Sending discovery information to Zabbix...")
+    zabbix_sender(host_hostname, discovery_items, zabbix_agent_config)
+
+    print("Retrieving available patches...")
+    patchlist = zypper_cmd("list-patches")
+
+    print("Retrieving available package updates...")
+    packagelist = zypper_cmd("list-updates")
 
     # Generate patch update items
     for category in categories:
+        update_info["patches"][category] = {}
         for severity in severities:
             patch_count = len(patchlist.findall(f"update-status/*/update[@category='{category}'][@severity='{severity}']"))
-            zabbix_items[f"patches.{category}.{severity}"] = patch_count
-
-    # Generate package update items
-    package_updates = packagelist.findall("update-status/*/update[@kind='package']")
-    package_count_total = len(package_updates)
-    zabbix_items[f"packages.count"] = package_count_total
-
-    for repository in repositories:
-        package_count = len(packagelist.findall(f"update-status/*/update[@kind='package']/source[@alias='{repository}']"))
-        zabbix_items[f"packages.{repository}"] = package_count
-
-    packages = []
-    for package in package_updates:
-        packages.append(f"{package.get('name')}.{package.get('arch')}")
-    zabbix_items["packages"] = ", ".join(packages)
+            update_info["patches"][category][severity] = patch_count
 
     # Generate list of known vulnerabilitiess
     vulnerabilities = []
     for vulnerability in patchlist.findall("update-status/*/update/issue-list/issue[@type='cve']"):
         vulnerabilities.append(vulnerability.get('id'))
-    # Remove duplicates
+    # Remove duplicates and sort
     vulnerabilities = list(dict.fromkeys(vulnerabilities))
     vulnerabilities.sort()
-    zabbix_items["security.cves"] = ", ".join(vulnerabilities)
+    update_info["patches"]["security"]["cves"] = ", ".join(vulnerabilities)
+
+    # Generate package update items
+    package_updates = packagelist.findall("update-status/*/update[@kind='package']")
+    package_count_total = len(package_updates)
+    update_info["packages"]["all"] = package_count_total
+
+    for repository in repositories:
+        package_count = len(packagelist.findall(f"update-status/*/update[@kind='package']/source[@alias='{repository}']"))
+        update_info["packages"][repository] = package_count
+
+    # Generate package list
+    packages = []
+    for package in package_updates:
+        packages.append(f"{package.get('name')}.{package.get('arch')}")
+    update_info["packages"]["list"] = ", ".join(packages)
 
     # Send results to Zabbix
     print("Sending results to Zabbix...")
-    zabbix_sender(host_hostname, zabbix_items, zabbix_agent_config)
+    zabbix_sender(host_hostname, {"raw": json.dumps(update_info)}, zabbix_agent_config)
 
 if __name__ == "__main__":
     main()
