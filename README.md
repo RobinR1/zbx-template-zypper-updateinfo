@@ -21,6 +21,7 @@ Accompanying script requires Python >= 3.4
 On all hosts you want to monitor:
 - Install packages `python3` and `zabbix-sender` 
 - Copy `scripts/zypper-updateinfo.py` to `/etc/zabbix/scripts`
+- Check `zabbix_sender_bin`, `zabbix_agent_config` paths and the `hostname_name` variable in `scripts/zypper-updateinfo.py` and adapt if required
 - Copy Systemd unit files 
   - `systemd/zabbix-template-module-zypper-updateinfo.service` and 
   - `systemd/zabbix-template-module-zypper-updateinfo.timer` 
