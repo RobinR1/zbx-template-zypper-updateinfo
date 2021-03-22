@@ -46,10 +46,10 @@ No specific Zabbix configuration is required
 
 |Name|Description|Default|
 |----|-----------|-------|
-|{$ZYPPER.PATCH.CATEGORY_FILTER} |<p>Patch categories to monitor for new patches</p>|`^(security|recommended|optional|feature|document|yast)$` |
-|{$ZYPPER.PATCH.SEVERITY_FILTER} |<p>Patch severities to monitor for new patches</p>|`^(critical|important|moderate|low|unspecified)$` |
+|{$ZYPPER.PATCH.CATEGORY_FILTER} |<p>Patch categories to monitor for new patches</p>|`^(security\|recommended\|optional\|feature\|document\|yast)$` |
+|{$ZYPPER.PATCH.SEVERITY_FILTER} |<p>Patch severities to monitor for new patches</p>|`^(critical\|important\|moderate\|low\|unspecified)$` |
 |{$ZYPPER.REPO.ALIAS_FILTER} |<p>Filter on alias of repositories to discover</p>| `^(.*)$` |
-|{$ZYPPER.REPO.AUTOREFRESH_FILTER} |<p>Filter on 'autorefresh' attribute of repositories to discover</p>|`^(0|1)$` |
+|{$ZYPPER.REPO.AUTOREFRESH_FILTER} |<p>Filter on 'autorefresh' attribute of repositories to discover</p>|`^(0\|1)$` |
 |{$ZYPPER.REPO.ENABLED_FILTER} |<p>Filter on 'enabled' attribute of repositories to discover</p>|`1` |
 |{$ZYPPER.UPDATEINFO.MAXAGE} |<p>Max age of available security updates information</p>|`2d` |
 
