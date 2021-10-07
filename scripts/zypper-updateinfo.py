@@ -13,6 +13,8 @@
 # Zabbix trapper" template.
 # Schedule this script to run each hour or so using a Systemd timer or cron job.
 
+import os
+import sys
 import subprocess
 import xml.etree.ElementTree as ET
 import json
@@ -97,6 +99,12 @@ def main():
         "patches": {},
         "packages": {}
     }
+
+    if not os.path.isfile(zabbix_sender_bin) or os.access(zabbix_sender_bin, os.X_OK):
+        sys.exit("Zabbix sender {zabbix_sender_bin} was not found or is not executable.".format(zabbix_sender_bin=zabbix_sender_bin))
+    
+    if not os.path.isfile(zabbix_agent_config) or os.access(zabbix_agent_config, os.R_OK):
+        sys.exit("Zabbix config {zabbix_agent_config} was not found or is not readable.".format(zabbix_agent_config=zabbix_agent_config))
 
     discovery_items["patch_category.discovery"] = patch_category_discovery()
 
