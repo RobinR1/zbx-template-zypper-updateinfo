@@ -50,14 +50,18 @@ def zabbix_sender(hostname, trapitems, configfile):
     # Send a dict of Zabbix trapper items and their values to Zabbix server
     with tempfile.NamedTemporaryFile(buffering=0) as fp:
         for key, value in trapitems.items():
-            line = f"{hostname} {zabbix_item_key_prefix}.{key} {value}\n"
+            line = "{hostname} {zabbix_item_key_prefix}.{key} {value}\n"\
+                .format(hostname=hostname, zabbix_item_key_prefix=zabbix_item_key_prefix, key=key, value=value)
             fp.write(str.encode(line))
 
-        command = f"{zabbix_sender_bin} -c {configfile} -i \"{fp.name}\""
+        command = "{zabbix_sender_bin} -c {configfile} -i \"{fp_name}\""\
+            .format(zabbix_sender_bin=zabbix_sender_bin, configfile=configfile, fp_name=fp.name)
         try:
             output = subprocess.check_output(command, shell=True)
         except subprocess.CalledProcessError as zabbix_sender_exc:
-            print(f"Error running {zabbix_sender_bin}: {zabbix_sender_exc.returncode}\n{zabbix_sender_exc.output.decode('utf-8')}")
+            print("Error running {zabbix_sender_bin}: {zabbix_sender_exc_rc}\n{zabbix_sender_exc_output}"\
+                .format(zabbix_sender_bin=zabbix_sender_bin, zabbix_sender_exc_rc=zabbix_sender_exc.returncode, \
+                    zabbix_sender_exc_output=zabbix_sender_exc.output.decode('utf-8')))
         else: 
             print(output.decode("utf-8"))
 
@@ -112,7 +116,8 @@ def main():
     for category in categories:
         update_info["patches"][category] = {}
         for severity in severities:
-            patch_count = len(patchlist.findall(f"update-status/*/update[@category='{category}'][@severity='{severity}']"))
+            patch_count = len(patchlist.findall("update-status/*/update[@category='{category}'][@severity='{severity}']"\
+                .format(category=category, severity=severity)))
             update_info["patches"][category][severity] = patch_count
 
     # Generate list of known vulnerabilitiess
@@ -130,13 +135,14 @@ def main():
     update_info["packages"]["all"] = package_count_total
 
     for repository in repositories:
-        package_count = len(packagelist.findall(f"update-status/*/update[@kind='package']/source[@alias='{repository}']"))
+        package_count = len(packagelist.findall("update-status/*/update[@kind='package']/source[@alias='{repository}']"\
+            .format(repository=repository)))
         update_info["packages"][repository] = package_count
 
     # Generate package list
     packages = []
     for package in package_updates:
-        packages.append(f"{package.get('name')}.{package.get('arch')}")
+        packages.append("{package_name}.{package_arch}".format(package_name=package.get('name'), package_arch=package.get('arch')))
     update_info["packages"]["list"] = ", ".join(packages)
 
     # Send results to Zabbix
