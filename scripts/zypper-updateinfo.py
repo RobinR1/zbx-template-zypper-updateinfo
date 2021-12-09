@@ -4,7 +4,7 @@
 #                        Zypper and send it to Zabbix.
 #
 # Author: robin.roevens (at) disroot.org
-# Version: 1.0
+# Version: 1.0.1
 #
 # Requires: python >= 3.4
 #           zabbix-sender
@@ -100,10 +100,10 @@ def main():
         "packages": {}
     }
 
-    if not os.path.isfile(zabbix_sender_bin) or os.access(zabbix_sender_bin, os.X_OK):
+    if not (os.path.isfile(zabbix_sender_bin) or os.access(zabbix_sender_bin, os.X_OK)):
         sys.exit("Zabbix sender {zabbix_sender_bin} was not found or is not executable.".format(zabbix_sender_bin=zabbix_sender_bin))
     
-    if not os.path.isfile(zabbix_agent_config) or os.access(zabbix_agent_config, os.R_OK):
+    if not (os.path.isfile(zabbix_agent_config) or os.access(zabbix_agent_config, os.R_OK)):
         sys.exit("Zabbix config {zabbix_agent_config} was not found or is not readable.".format(zabbix_agent_config=zabbix_agent_config))
 
     discovery_items["patch_category.discovery"] = patch_category_discovery()
