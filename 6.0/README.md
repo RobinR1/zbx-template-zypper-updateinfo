@@ -2,7 +2,7 @@
 
 ## Overview
 
-For Zabbix version: 5.2
+For Zabbix version: 6.0
 
 This template monitors a host for available patches and general package updates by repository. Using discovery it will create items and
 triggers for all required patch categories/severities and/or package repositories, configurable using macro's. 
@@ -10,8 +10,7 @@ Additionally it will feed Zabbix with a list of known vulnerabilities (as known 
 
 This template was tested on:
 
-- Zabbix 5.2
-- openSUSE Leap 15.2
+- openSUSE Leap 15.2, 15.3
 but should work on any SLES/openSUSE Leap 15.x
 
 Accompanying script requires Python >= 3.4
